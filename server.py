@@ -1,5 +1,5 @@
 #  coding: utf-8 
-import socketserver
+import socketserver, os
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -31,8 +31,27 @@ class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        # print ("Got a request of: %s\n" % self.data)
+
+        # Parse the data 
+        request = self.data.decode("utf-8").split("\r\n") 
+        request = request[0].split() # ['GET', path, 'HTTP/1.1']
+
+        self.method = request[0]
+        self.path = request[1]
+        self.version = request[2]
+
+
+
+        if self.method.upper() != "GET":
+            # send 405 Method Not Allowed
+            self.send_error("405 Method Not Allowed")
+        
+        # self.request.sendall(bytearray("OK",'utf-8'))
+    
+    def send_error(self, status, path_location = ""):
+        error = self.version + status + "\r\nDate: " + date + "\r\n" + path_location + "Content-Length: " + content_length + "\r\nContent-Type:" + content_type + "\r\n" + "Connection: close\r\n\r\n"
+        self.request.sendall(bytearray(error,'utf-8'))
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
